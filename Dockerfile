@@ -3,27 +3,27 @@ FROM ghcr.io/parkervcp/yolks:python_3.12
 
 USER root
 
-# System packages we actually need:
-# - curl + ca-certificates: download installers safely
-# - xz-utils: some archives rely on it
-# - ffmpeg: required by yt-dlp for merging / audio extraction
+# We need:
+# - curl + ca-certificates to fetch the installer
+# - unzip because the Deno installer downloads a zip
+# - ffmpeg for yt-dlp merges/audio extraction
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      ca-certificates curl xz-utils ffmpeg && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+      ca-certificates curl unzip ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install latest Deno (more reliable than Node for yt-dlp JS challenges)
-RUN curl -fsSL https://deno.land/x/install/install.sh | sh
+# Install the latest Deno using the official install script
+# (Docs recommend this exact URL)
+# We'll install it into /usr/local/deno so it’s not stuck in /root/.deno
+ENV DENO_INSTALL=/usr/local/deno
+RUN curl -fsSL https://deno.land/install.sh | sh
 
-# Make sure Deno is available to the container user at runtime
-ENV PATH="/root/.deno/bin:/usr/local/bin:${PATH}"
+# Put Deno on PATH for everyone (root + the pterodactyl "container" user)
+ENV PATH="/usr/local/deno/bin:${PATH}"
 
-# Fail the build early if something important is missing
+# Quick sanity checks (fail the build if anything is missing)
 RUN python --version && deno --version && ffmpeg -version | head -n 1
 
-# Switch back to the user Pterodactyl expects
+# Back to the default container user expected by Pterodactyl
 USER container
 WORKDIR /home/container
-
-# Keep Deno in PATH after switching users
-ENV PATH="/root/.deno/bin:/usr/local/bin:${PATH}"
