@@ -3,16 +3,16 @@ FROM ghcr.io/parkervcp/yolks:python_3.12
 
 USER root
 
-# Install OS deps + ffmpeg + Node.js LTS
-# Notes:
-# - xz-utils is needed for some tar/archives tooling
-# - ca-certificates/curl for Nodesource installer
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      ca-certificates curl gnupg xz-utils ffmpeg && \
-    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
-    apt-get install -y --no-install-recommends nodejs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl ffmpeg \
+ && rm -rf /var/lib/apt/lists/*
+
+# Install Deno to /usr/local/bin/deno
+ENV DENO_INSTALL=/usr/local
+RUN curl -fsSL https://deno.land/x/install/install.sh | sh
+
+# Ensure /usr/local/bin is in PATH (it usually is, but we force it)
+ENV PATH="/usr/local/bin:${PATH}"
 
 # Quick sanity checks (build will fail if missing)
 RUN python --version && node --version && npm --version && ffmpeg -version | head -n 1
