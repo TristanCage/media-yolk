@@ -28,12 +28,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
+          
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/media-yolk:latest
-            ghcr.io/${{ github.repository_owner }}/media-yolk:py312-node-lts-ffmpeg
+            ghcr.io/tristancage/media-yolk:latest
+            ghcr.io/tristancage/media-yolk:py312-node-lts-ffmpeg
